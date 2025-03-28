@@ -7,7 +7,7 @@ pyvenv.cfg
 .ipynb_checkpoints/
 .bashrc
 .DS_STORE
-*.tmp_dagster_home_7ak0vq1j
+*.tmp_dagster_*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
