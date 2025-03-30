@@ -14,7 +14,13 @@ from .sensors import adhoc_request_sensor
 # The database resource is defined to connect to the DuckDB database.
 
 trip_assets = dg.load_assets_from_modules([trips])
-metric_assets = dg.load_assets_from_modules([metrics])
+
+metric_assets = dg.load_assets_from_modules(
+    modules=[metrics],
+    group_name="metrics",
+)
+
+
 request_assets = dg.load_assets_from_modules([requests])
 match_assets = dg.load_assets_from_modules([matches])
 

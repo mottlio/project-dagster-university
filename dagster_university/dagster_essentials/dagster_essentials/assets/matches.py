@@ -3,7 +3,8 @@ from dagster_duckdb import DuckDBResource
 from ..partitions import monthly_partition
 
 @asset(
-        partitions_def=monthly_partition
+        partitions_def=monthly_partition,
+        group_name='tennis'
 )
 def atp_matches_dataset(database: DuckDBResource) -> None:
     """This asset downloads the csv file with tennis match results from the API"""
