@@ -1,6 +1,8 @@
 import dagster as dg
 from dagster import Config, asset
 from dagster_duckdb import DuckDBResource
+import base64
+
 
 import matplotlib.pyplot as plt
 
@@ -73,3 +75,18 @@ def adhoc_request(config: AdhocRequestConfig, database: DuckDBResource) -> None:
     plt.savefig(file_path)
     plt.close(fig)
     # Save the figure
+
+    with open(file_path, 'rb') as file:
+      image_data = file.read()
+
+    #Include in metadata Dagster UI in markdown format
+
+    base64_data = base64.b64encode(image_data).decode('utf-8')
+    md_content = f"![Image](data:image/jpeg;base64,{base64_data})"
+
+    return dg.MaterializeResult(
+    metadata={
+        "preview": dg.MetadataValue.md(md_content)
+    }
+)
+
