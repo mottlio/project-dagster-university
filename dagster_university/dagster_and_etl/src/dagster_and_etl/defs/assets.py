@@ -6,16 +6,32 @@ from pathlib import Path
 import pandas as pd
 from io import StringIO
 from azure.storage.blob import BlobServiceClient
+from pydantic import field_validator
+import datetime
 import os
+from dagster_and_etl.defs.resources import NASAResource
 
+#Configs
 class IngestionFileConfig(dg.Config):
     path: str = "2018-01-22.csv"
 
-
 class IngestionFileAzureConfig(dg.Config):
     connection_string: str = os.getenv("AZURE_STORAGE_CONNECTION_STRING", "")
+class NasaDate(dg.Config):
+    date: str
+
+    @field_validator("date")
+    @classmethod
+    def validate_date_format(cls, v):
+        try:
+            datetime.datetime.strptime(v, "%Y-%m-%d")
+        except ValueError:
+            raise ValueError("event_date must be in 'YYYY-MM-DD' format")
+        return v
 
 
+
+#Assets
 @dg.asset()
 def import_file(context: dg.AssetExecutionContext, config: IngestionFileConfig) -> str:
     file_path = (
@@ -274,3 +290,66 @@ def duckdb_table_azure_merchant_service_fees(
         conn.execute(f"CREATE TABLE {table_name} AS SELECT * FROM import_file_azure_merchant_service_fees")
         
 
+## NASA asset 
+
+@dg.asset(
+    kinds={"nasa"},
+)
+def asteroids(
+    context: dg.AssetExecutionContext,
+    config: NasaDate,
+    nasa: NASAResource,
+) -> list[dict]:
+    anchor_date = datetime.datetime.strptime(config.date, "%Y-%m-%d")
+    start_date = (anchor_date - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
+
+    return nasa.get_near_earth_asteroids(
+        start_date=start_date,
+        end_date=config.date,
+    )
+
+# src/dagster_and_etl/defs/assets.py
+@dg.asset
+def asteroids_dataframe(
+    context: dg.AssetExecutionContext,
+    asteroids,
+) -> pd.DataFrame:
+    # Only load specific fields
+    fields = [
+        "id",
+        "name",
+        "absolute_magnitude_h",
+        "is_potentially_hazardous_asteroid",
+    ]
+
+    # Extract only the required fields from the asteroids data
+    filtered_data = [
+        {key: row[key] for key in fields if key in row} 
+        for row in asteroids
+    ]
+    
+    # Convert to DataFrame
+    df = pd.DataFrame(filtered_data)
+    
+    return df
+
+@dg.asset(
+    kinds={"duckdb"},
+)
+def duckdb_table_asteroids(
+    context: dg.AssetExecutionContext,
+    database: DuckDBResource,
+    asteroids_dataframe: pd.DataFrame,
+) -> None:
+    table_name = "raw_asteroid_data"
+    with database.get_connection() as conn:
+        table_query = f"""
+            create table if not exists {table_name} (
+                id varchar(10),
+                name varchar(100),
+                absolute_magnitude_h float,
+                is_potentially_hazardous_asteroid boolean
+            ) 
+        """
+        conn.execute(table_query)
+        conn.append(table_name, asteroids_dataframe)

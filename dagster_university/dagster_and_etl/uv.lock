@@ -434,6 +434,7 @@ dependencies = [
     { name = "dlt", extra = ["duckdb"] },
     { name = "pandas" },
     { name = "psycopg2-binary" },
+    { name = "pydantic" },
     { name = "requests" },
 ]
 
@@ -455,6 +456,7 @@ requires-dist = [
     { name = "dlt", extras = ["duckdb"] },
     { name = "pandas" },
     { name = "psycopg2-binary" },
+    { name = "pydantic", specifier = ">=2.11.7" },
     { name = "requests", specifier = ">=2.32.5" },
 ]
 

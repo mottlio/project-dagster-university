@@ -11,7 +11,10 @@ from dagster_and_etl.defs.assets import (
     import_file_azure_interchange_fees,
     duckdb_table_azure_interchange_fees,
     import_file_azure_merchant_service_fees,
-    duckdb_table_azure_merchant_service_fees
+    duckdb_table_azure_merchant_service_fees,
+    asteroids,
+    asteroids_dataframe,
+    duckdb_table_asteroids
 )
 
 # Job for static partitioned assets (used by the schedule)
@@ -71,5 +74,15 @@ azure_all_data_job = dg.define_asset_job(
         duckdb_table_azure_interchange_fees,
         import_file_azure_merchant_service_fees,
         duckdb_table_azure_merchant_service_fees,
+    ),
+)
+
+# Job to fetch NASA asteroid data and store in DuckDB
+nasa_asteroids_job = dg.define_asset_job(
+    name="nasa_asteroids_job",
+    selection=dg.AssetSelection.assets(
+        asteroids,
+        asteroids_dataframe,
+        duckdb_table_asteroids,
     ),
 )

@@ -16,6 +16,7 @@ dependencies = [
     "pandas",
     "azure-storage-blob>=12.26.0",
     "requests>=2.32.5",
+    "pydantic>=2.11.7",
 ]
 
 [tool.uv]
