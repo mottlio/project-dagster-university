@@ -436,6 +436,7 @@ dependencies = [
     { name = "psycopg2-binary" },
     { name = "pydantic" },
     { name = "requests" },
+    { name = "urllib3" },
 ]
 
 [package.dev-dependencies]
@@ -458,6 +459,7 @@ requires-dist = [
     { name = "psycopg2-binary" },
     { name = "pydantic", specifier = ">=2.11.7" },
     { name = "requests", specifier = ">=2.32.5" },
+    { name = "urllib3", specifier = ">=2.5.0" },
 ]
 
 [package.metadata.requires-dev]

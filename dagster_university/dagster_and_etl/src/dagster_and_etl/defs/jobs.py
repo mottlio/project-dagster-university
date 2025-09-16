@@ -6,13 +6,14 @@ from dagster_and_etl.defs.assets import (
     duckdb_dynamic_partition_table,
     partitions_def,
     dynamic_partitions_def,
+    nasa_partitions_def,
     import_file_azure_credit_cards,
     duckdb_table_azure_credit_cards,
     import_file_azure_interchange_fees,
     duckdb_table_azure_interchange_fees,
     import_file_azure_merchant_service_fees,
     duckdb_table_azure_merchant_service_fees,
-    asteroids,
+    asteroids_partition,
     asteroids_dataframe,
     duckdb_table_asteroids
 )
@@ -81,8 +82,9 @@ azure_all_data_job = dg.define_asset_job(
 nasa_asteroids_job = dg.define_asset_job(
     name="nasa_asteroids_job",
     selection=dg.AssetSelection.assets(
-        asteroids,
+        asteroids_partition,
         asteroids_dataframe,
         duckdb_table_asteroids,
     ),
+    partitions_def=nasa_partitions_def,
 )

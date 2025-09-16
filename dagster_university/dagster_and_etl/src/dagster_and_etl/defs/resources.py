@@ -5,6 +5,8 @@ from dotenv import load_dotenv
 import dagster as dg
 import requests
 from dagster_duckdb import DuckDBResource
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 # Load environment variables
 load_dotenv()
@@ -24,6 +26,17 @@ class NASAResource(dg.ConfigurableResource):
             "end_date": end_date,
             "api_key": self.api_key,
         }
+
+        # Retries logic
+        session = requests.Session()
+        retries = Retry(
+            total=5,
+            backoff_factor=0.5,
+            status_forcelist=[500, 502, 503, 504],
+            allowed_methods=["GET"]
+        )
+        adapter = HTTPAdapter(max_retries=retries)
+        session.mount("https://", adapter)
 
         resp = requests.get(url, params=params)
         return resp.json()["near_earth_objects"][start_date]

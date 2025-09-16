@@ -11,6 +11,20 @@ import datetime
 import os
 from dagster_and_etl.defs.resources import NASAResource
 
+# Partitions
+
+partitions_def = dg.DailyPartitionsDefinition(
+    start_date="2018-01-21",
+    end_date="2018-01-24",
+)
+
+nasa_partitions_def = dg.DailyPartitionsDefinition(
+    start_date="2024-04-01",
+)
+
+
+
+
 #Configs
 class IngestionFileConfig(dg.Config):
     path: str = "2018-01-22.csv"
@@ -94,10 +108,7 @@ def not_empty(
 
 #Partitioned assets
 
-partitions_def = dg.DailyPartitionsDefinition(
-    start_date="2018-01-21",
-    end_date="2018-01-24",
-)
+
 
 
 @dg.asset(
@@ -294,25 +305,27 @@ def duckdb_table_azure_merchant_service_fees(
 
 @dg.asset(
     kinds={"nasa"},
+    partitions_def=nasa_partitions_def,
 )
-def asteroids(
+def asteroids_partition(
     context: dg.AssetExecutionContext,
-    config: NasaDate,
     nasa: NASAResource,
 ) -> list[dict]:
-    anchor_date = datetime.datetime.strptime(config.date, "%Y-%m-%d")
+    anchor_date = datetime.datetime.strptime(context.partition_key, "%Y-%m-%d")
     start_date = (anchor_date - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
 
     return nasa.get_near_earth_asteroids(
         start_date=start_date,
-        end_date=config.date,
+        end_date=context.partition_key,
     )
 
 # src/dagster_and_etl/defs/assets.py
-@dg.asset
+@dg.asset(
+    partitions_def=nasa_partitions_def,
+)
 def asteroids_dataframe(
     context: dg.AssetExecutionContext,
-    asteroids,
+    asteroids_partition: list[dict],
 ) -> pd.DataFrame:
     # Only load specific fields
     fields = [
@@ -325,16 +338,21 @@ def asteroids_dataframe(
     # Extract only the required fields from the asteroids data
     filtered_data = [
         {key: row[key] for key in fields if key in row} 
-        for row in asteroids
+        for row in asteroids_partition
     ]
     
     # Convert to DataFrame
     df = pd.DataFrame(filtered_data)
+
+    #Add column 'date' equal to context.partition_key
+
+    df['date'] = context.partition_key
     
     return df
 
 @dg.asset(
     kinds={"duckdb"},
+    partitions_def=nasa_partitions_def,
 )
 def duckdb_table_asteroids(
     context: dg.AssetExecutionContext,
@@ -348,7 +366,8 @@ def duckdb_table_asteroids(
                 id varchar(10),
                 name varchar(100),
                 absolute_magnitude_h float,
-                is_potentially_hazardous_asteroid boolean
+                is_potentially_hazardous_asteroid boolean,
+                date date
             ) 
         """
         conn.execute(table_query)
