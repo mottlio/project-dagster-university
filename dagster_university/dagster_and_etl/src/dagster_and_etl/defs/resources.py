@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 import dagster as dg
 import requests
 from dagster_duckdb import DuckDBResource
+from dagster_dlt import DagsterDltResource
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
@@ -53,6 +54,7 @@ def resources():
             "database": DuckDBResource(
                 database="data/staging/data.duckdb",
             ),
-            "azure_blob_storage": AzureBlobStorageResource()
+            "azure_blob_storage": AzureBlobStorageResource(),
+            "dlt": DagsterDltResource(),
         }
     )

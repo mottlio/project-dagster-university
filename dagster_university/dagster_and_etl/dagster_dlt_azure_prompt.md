@@ -1,0 +1,4 @@
+I would like you to create a dagster asset using a dlt source to access the Azure blob="credit_cards.csv" from the container = "creditcards". The AZURE_STORAGE_CONNECTION_STRING is currently stored in the .env file. I would like the dlt pipeline to load the contents of that file into the motherduck database. The database name and the connection token is already configured in the secrets.toml file.
+
+Create two new dagster assets similar to dlt_azure_credit_cards. They will both pull data from the same Azure account and place it in the same MotherDuck database. The first one will pull data from the blob="interchange_fees.csv" in the container "interchangefees". The second one from the blob="merchant_service_fees.csv" in the container "merchantservicefees". Please think how this can be implemented without unnecessary duplication of code.
+         

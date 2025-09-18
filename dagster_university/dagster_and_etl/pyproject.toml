@@ -12,7 +12,7 @@ dependencies = [
     "dagster-dlt",
     "dagster-sling",
     "psycopg2-binary",
-    "dlt[duckdb]",
+    "dlt[duckdb,parquet]",
     "pandas",
     "azure-storage-blob>=12.26.0",
     "requests>=2.32.5",
